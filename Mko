@@ -1,0 +1,108 @@
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local Camera = workspace.CurrentCamera
+
+local LocalPlayer = Players.LocalPlayer
+local TargetPlayer = nil
+local Mode = 1
+
+function SetTargetPlayer(playerName)
+    for _, player in pairs(Players:GetPlayers()) do
+        if player.Name:lower() == playerName:lower() then
+            TargetPlayer = player
+            return
+        end
+    end
+end
+
+RunService.RenderStepped:Connect(function()
+    if TargetPlayer and TargetPlayer.Character and TargetPlayer.Character:FindFirstChild("HumanoidRootPart") then
+        local TargetPos = TargetPlayer.Character.HumanoidRootPart.Position
+        
+        if Mode == 1 then
+            Camera.CameraType = Enum.CameraType.Scriptable
+            Camera.CFrame = TargetPlayer.Character.Head.CFrame
+        elseif Mode == 2 then
+            Camera.CameraType = Enum.CameraType.Scriptable
+            Camera.CFrame = CFrame.new(TargetPos + Vector3.new(0, 5, -10), TargetPos)
+        elseif Mode == 3 then
+            Camera.CameraType = Enum.CameraType.Scriptable
+            Camera.CFrame = CFrame.new(TargetPos + Vector3.new(0, 20, 0), TargetPos)
+        end
+    end
+end)
+
+function ChangeMode()
+    Mode = Mode + 1
+    if Mode > 3 then
+        Mode = 1
+    end
+end
+
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Parent = game.Players.LocalPlayer:WaitForChild("PlayerGui")
+
+local Frame = Instance.new("Frame")
+Frame.Size = UDim2.new(0, 300, 0, 400)
+Frame.Position = UDim2.new(0.5, -150, 0.5, -200)
+Frame.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+Frame.Parent = ScreenGui
+
+local dropdownButton = Instance.new("TextButton")
+dropdownButton.Size = UDim2.new(0, 280, 0, 50)
+dropdownButton.Position = UDim2.new(0, 10, 0, 10)
+dropdownButton.Text = "Select Player"
+dropdownButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+dropdownButton.BackgroundColor3 = Color3.fromRGB(100, 100, 100)
+dropdownButton.Parent = Frame
+
+local playerList = Instance.new("Frame")
+playerList.Size = UDim2.new(0, 280, 0, 150)
+playerList.Position = UDim2.new(0, 10, 0, 70)
+playerList.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+playerList.Visible = false
+playerList.Parent = Frame
+
+local function createPlayerOption(player)
+    local button = Instance.new("TextButton")
+    button.Size = UDim2.new(0, 260, 0, 30)
+    button.Position = UDim2.new(0, 10, 0, (#playerList:GetChildren() - 1) * 35)
+    button.Text = player.Name
+    button.TextColor3 = Color3.fromRGB(255, 255, 255)
+    button.BackgroundColor3 = Color3.fromRGB(80, 80, 80)
+    button.Parent = playerList
+
+    button.MouseButton1Click:Connect(function()
+        SetTargetPlayer(player.Name)
+        playerList.Visible = false
+    end)
+end
+
+dropdownButton.MouseButton1Click:Connect(function()
+    playerList.Visible = not playerList.Visible
+
+    if playerList.Visible then
+        for _, child in pairs(playerList:GetChildren()) do
+            if child:IsA("TextButton") then
+                child:Destroy()
+            end
+        end
+        for _, player in pairs(Players:GetPlayers()) do
+            if player.Name ~= LocalPlayer.Name then
+                createPlayerOption(player)
+            end
+        end
+    end
+end)
+
+local modeButton = Instance.new("TextButton")
+modeButton.Size = UDim2.new(0, 280, 0, 50)
+modeButton.Position = UDim2.new(0, 10, 0, 250)
+modeButton.Text = "Change Camera Mode"
+modeButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+modeButton.BackgroundColor3 = Color3.fromRGB(100, 100, 100)
+modeButton.Parent = Frame
+
+modeButton.MouseButton1Click:Connect(function()
+    ChangeMode()
+end)
